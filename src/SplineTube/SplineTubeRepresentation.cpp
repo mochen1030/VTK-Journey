@@ -177,13 +177,6 @@ SplineTubeRepresentation::SplineTubeRepresentation()
 	this->LinesActor->SetProperty(this->LinesProperty);
 
 	// ³õÊ¼»¯ Tube¡¢TubeMapper¡¢TubeActor.mc
-	//this->Tube = vtkPolyData::New();
-	//this->TubeMapper = vtkPolyDataMapper::New();
-	//this->TubeMapper->SetInputData(this->Tube);
-	//this->TubeActor = vtkActor::New();
-	//this->TubeActor->SetMapper(this->TubeMapper);
-	//this->TubeActor->SetProperty(this->TubeProperty);
-
 	this->TubeSpline = vtkParametricSpline::New();
 	this->TubeFunctionSource = vtkParametricFunctionSource::New();
 	this->TubeFunctionSource->SetParametricFunction(TubeSpline);

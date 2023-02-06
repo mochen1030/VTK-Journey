@@ -188,10 +188,7 @@ protected:
 
 	void BuildLines() override;
 
-	//vtkPolyData*											Tube;								// 样条管道 polydata, mc
-	//vtkPolyDataMapper*									TubeMapper;							// 样条管道 polydata mapper, mc
-	//vtkActor*												TubeActor;							// 样条管道 polydata actor, mc
-	//vtkProperty*											TubeProperty;						// 样条管道属性, mc
+	// mc
 	vtkParametricSpline*									TubeSpline;
 	vtkParametricFunctionSource*							TubeFunctionSource;
 	vtkTubeFilter*											Tube;
