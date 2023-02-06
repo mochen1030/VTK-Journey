@@ -10,4 +10,17 @@
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SplineTubeRepresentation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SplineTube.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SplineTubeRepresentation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
