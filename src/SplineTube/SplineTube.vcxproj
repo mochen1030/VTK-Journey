@@ -126,15 +126,15 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)3rdParty\VTK-9.1.0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vtkCommonColor-9.1.lib;vtkCommonCore-9.1.lib;vtkCommonComputationalGeometry-9.1.lib;vtkCommonDataModel-9.1.lib;vtkCommonExecutionModel-9.1.lib;vtkCommonTransforms-9.1.lib;vtkFiltersCore-9.1.lib;vtkFiltersGeneral-9.1.lib;vtkFiltersSources-9.1.lib;vtkInteractionStyle-9.1.lib;vtkInteractionWidgets-9.1.lib;vtkRenderingCore-9.1.lib;vtkRenderingOpenGL2-9.1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vtkCommonColor-9.1.lib;vtkCommonCore-9.1.lib;vtkCommonDataModel-9.1.lib;vtkCommonExecutionModel-9.1.lib;vtkCommonTransforms-9.1.lib;vtkFiltersCore-9.1.lib;vtkFiltersGeneral-9.1.lib;vtkFiltersSources-9.1.lib;vtkInteractionStyle-9.1.lib;vtkInteractionWidgets-9.1.lib;vtkRenderingCore-9.1.lib;vtkRenderingOpenGL2-9.1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="SplineTube.cpp" />
-    <ClCompile Include="SplineTubeRepresentation.cpp" />
+    <ClCompile Include="SplineTubeContourRepresentation.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SplineTubeRepresentation.h" />
+    <ClInclude Include="SplineTubeContourRepresentation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

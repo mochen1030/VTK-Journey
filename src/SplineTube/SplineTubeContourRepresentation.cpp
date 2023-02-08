@@ -1,39 +1,32 @@
-// own included files
-#include "SplineTubeRepresentation.h"
+// own inclues
+#include "SplineTubeContourRepresentation.h"
 
+// vtk includes
 #include <vtkActor.h>
-#include <vtkAssemblyPath.h>
 #include <vtkBezierContourLineInterpolator.h>
 #include <vtkCamera.h>
-#include <vtkCellArray.h>
 #include <vtkCleanPolyData.h>
-#include <vtkCoordinate.h>
 #include <vtkCursor2D.h>
 #include <vtkCylinderSource.h>
 #include <vtkDoubleArray.h>
 #include <vtkFocalPlanePointPlacer.h>
 #include <vtkGlyph3D.h>
-#include <vtkInteractorObserver.h>
-#include <vtkLine.h>
-#include <vtkMath.h>
 #include <vtkObjectFactory.h>
 #include <vtkPointData.h>
-#include <vtkPoints.h>
-#include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
-#include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
-#include <vtkSphereSource.h>
+#include <vtkRenderWindow.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
 
-#include <iostream>		// std::cout, mc
+// implement the standard form of the New() method
+vtkStandardNewMacro(SplineTubeContourRepresentation);
 
-vtkStandardNewMacro(SplineTubeRepresentation);
-
-SplineTubeRepresentation::SplineTubeRepresentation()
+SplineTubeContourRepresentation::SplineTubeContourRepresentation()
 {
+	/********** Constructor copied from vtkOrientedGlyphContourRepresentation.cxx **********/
+
 	// Initialize state
 	this->InteractionState = vtkContourRepresentation::Outside;
 
@@ -176,23 +169,6 @@ SplineTubeRepresentation::SplineTubeRepresentation()
 	this->LinesActor->SetMapper(this->LinesMapper);
 	this->LinesActor->SetProperty(this->LinesProperty);
 
-	// 初始化 Tube、TubeMapper、TubeActor.mc
-	//this->Tube = vtkPolyData::New();
-	//this->TubeMapper = vtkPolyDataMapper::New();
-	//this->TubeMapper->SetInputData(this->Tube);
-	//this->TubeActor = vtkActor::New();
-	//this->TubeActor->SetMapper(this->TubeMapper);
-	//this->TubeActor->SetProperty(this->TubeProperty);
-
-	this->TubeSpline = vtkParametricSpline::New();
-	this->TubeFunctionSource = vtkParametricFunctionSource::New();
-	this->TubeFunctionSource->SetParametricFunction(TubeSpline);
-
-	this->Tube = vtkTubeFilter::New();
-	this->Tube->SetInputConnection(this->TubeFunctionSource->GetOutputPort());
-	this->Tube->SetRadius(2.5);
-	this->Tube->SetNumberOfSides(20);
-
 	this->InteractionOffset[0] = 0.0;
 	this->InteractionOffset[1] = 0.0;
 
@@ -204,10 +180,21 @@ SplineTubeRepresentation::SplineTubeRepresentation()
 	this->SelectedNodesGlypher = nullptr;
 	this->SelectedNodesMapper = nullptr;
 	this->SelectedNodesActor = nullptr;
+
+	// initialize the members about the tube, by mc
+	this->m_Tube = nullptr;
+	this->m_TubeMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+	this->m_TubeActor = vtkSmartPointer<vtkActor>::New();
+	this->m_TubeActor->SetMapper(this->m_TubeMapper);
+	this->m_TubeFilter = vtkSmartPointer<vtkTubeFilter>::New();
+	this->m_TubeFilter->SetRadius(2.4);
+	this->m_TubeFilter->SetNumberOfSides(20);
 }
 
-SplineTubeRepresentation::~SplineTubeRepresentation()
+SplineTubeContourRepresentation::~SplineTubeContourRepresentation()
 {
+	/********** Destructor copied from vtkOrientedGlyphContourRepresentation.cxx **********/
+
 	this->FocalPoint->Delete();
 	this->FocalData->Delete();
 
@@ -260,343 +247,9 @@ SplineTubeRepresentation::~SplineTubeRepresentation()
 	}
 }
 
-void SplineTubeRepresentation::SetCursorShape(vtkPolyData* shape)
+void SplineTubeContourRepresentation::BuildLines()
 {
-	// 设置光标形状.构造函数中设置 vtkCursor2D 的默认形状.在析构函数中形状设置为 nulptr.mc
-	if (shape != this->CursorShape)
-	{
-		if (this->CursorShape)
-		{
-			this->CursorShape->Delete();
-		}
-		this->CursorShape = shape;
-		if (this->CursorShape)
-		{
-			this->CursorShape->Register(this);
-		}
-		if (this->CursorShape)
-		{
-			this->Glypher->SetSourceData(this->CursorShape);
-		}
-		this->Modified();
-	}
-}
-
-vtkPolyData* SplineTubeRepresentation::GetCursorShape()
-{
-	return this->CursorShape;
-}
-
-void SplineTubeRepresentation::SetActiveCursorShape(vtkPolyData* shape)
-{
-	// 设置活动光标形状.构造函数中设置为 vtkCleanPolyData 形状.析构函数中设置为 nullptr.juwnei
-	if (shape != this->ActiveCursorShape)
-	{
-		if (this->ActiveCursorShape)
-		{
-			this->ActiveCursorShape->Delete();
-		}
-		this->ActiveCursorShape = shape;
-		if (this->ActiveCursorShape)
-		{
-			this->ActiveCursorShape->Register(this);
-		}
-		if (this->ActiveCursorShape)
-		{
-			this->ActiveGlypher->SetSourceData(this->ActiveCursorShape);
-		}
-		this->Modified();
-	}
-}
-
-vtkPolyData* SplineTubeRepresentation::GetActiveCursorShape()
-{
-	return this->ActiveCursorShape;
-}
-
-void SplineTubeRepresentation::SetRenderer(vtkRenderer* ren)
-{
-	// 在 contourwidget 开始交互时.会设置 renderer.mc
-	//  this->WorldPosition->SetViewport(ren);
-	this->Superclass::SetRenderer(ren);
-}
-
-int SplineTubeRepresentation::ComputeInteractionState(
-	int X, int Y, int vtkNotUsed(modified))
-{
-	//计算交互状态, 交互事件都会执行该函数（除鼠标前后滚动事件）, mc
-	//std::cout << " -- Compute Interaction State -- ";
-
-	double pos[4], xyz[3];
-	this->FocalPoint->GetPoint(0, pos);
-	pos[3] = 1.0;
-	this->Renderer->SetWorldPoint(pos);
-	this->Renderer->WorldToDisplay();
-	this->Renderer->GetDisplayPoint(pos);
-
-	xyz[0] = static_cast<double>(X);
-	xyz[1] = static_cast<double>(Y);
-	xyz[2] = pos[2];
-
-	this->VisibilityOn();
-	double tol2 = this->PixelTolerance * this->PixelTolerance;
-	if (vtkMath::Distance2BetweenPoints(xyz, pos) <= tol2)
-	{
-		this->InteractionState = vtkContourRepresentation::Nearby;
-		if (!this->ActiveCursorShape)
-		{
-			this->VisibilityOff();
-		}
-	}
-	else
-	{
-		this->InteractionState = vtkContourRepresentation::Outside;
-		if (!this->CursorShape)
-		{
-			this->VisibilityOff();
-		}
-	}
-
-	return this->InteractionState;
-}
-
-// Record the current event position, and the rectilinear wipe position.
-void SplineTubeRepresentation::StartWidgetInteraction(double startEventPos[2])
-{
-	//开始窗口交互, 在控制点处, 鼠标左键按下选取控制点（拖动）和鼠标滚动按下选择控制点（整体移动）时触发, mc
-	std::cout << " -- Start Widget Interaction -- ";
-
-	this->StartEventPosition[0] = startEventPos[0];
-	this->StartEventPosition[1] = startEventPos[1];
-	this->StartEventPosition[2] = 0.0;
-
-	this->LastEventPosition[0] = startEventPos[0];
-	this->LastEventPosition[1] = startEventPos[1];
-
-	// How far is this in pixels from the position of this widget?
-	// Maintain this during interaction such as translating (don't
-	// force center of widget to snap to mouse position)
-
-	// convert position to display coordinates
-	double pos[2];
-	this->GetNthNodeDisplayPosition(this->ActiveNode, pos);
-
-	this->InteractionOffset[0] = pos[0] - startEventPos[0];
-	this->InteractionOffset[1] = pos[1] - startEventPos[1];
-}
-
-// Based on the displacement vector (computed in display coordinates) and
-// the cursor state (which corresponds to which part of the widget has been
-// selected), the widget points are modified.
-// First construct a local coordinate system based on the display coordinates
-// of the widget.
-void SplineTubeRepresentation::WidgetInteraction(double eventPos[2])
-{
-	//开始窗口交互后执行, 处理拖动/整体移动, mc
-	//std::cout << " -- Widget Interaction -- ";
-
-	// Process the motion
-	if (this->CurrentOperation == vtkContourRepresentation::Translate)
-	{
-		// 移动控制点, mc
-		//std::cout << " -- Translate -- ";
-		this->Translate(eventPos);
-	}
-	if (this->CurrentOperation == vtkContourRepresentation::Shift)
-	{
-		// 整体拖动, mc
-		//std::cout << " -- ShiftContour -- ";
-		this->ShiftContour(eventPos);
-	}
-	if (this->CurrentOperation == vtkContourRepresentation::Scale)
-	{
-		std::cout << " -- ScaleContour -- ";
-		this->ScaleContour(eventPos);
-	}
-
-	// Book keeping
-	this->LastEventPosition[0] = eventPos[0];
-	this->LastEventPosition[1] = eventPos[1];
-}
-
-// Translate everything
-void SplineTubeRepresentation::Translate(double eventPos[2])
-{
-	double ref[3];
-
-	if (!this->GetActiveNodeWorldPosition(ref))
-	{
-		return;
-	}
-
-	double displayPos[2];
-	displayPos[0] = eventPos[0] + this->InteractionOffset[0];
-	displayPos[1] = eventPos[1] + this->InteractionOffset[1];
-
-	double worldPos[3];
-	double worldOrient[9] = { 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
-	if (this->PointPlacer->ComputeWorldPosition(
-		this->Renderer, displayPos, ref, worldPos, worldOrient))
-	{
-		this->SetActiveNodeToWorldPosition(worldPos, worldOrient);
-	}
-	else
-	{
-		// I really want to track the closest point here,
-		// but I am postponing this at the moment....
-	}
-}
-
-void SplineTubeRepresentation::ShiftContour(double eventPos[2])
-{
-	double ref[3];
-
-	if (!this->GetActiveNodeWorldPosition(ref))
-	{
-		return;
-	}
-
-	double displayPos[2];
-	displayPos[0] = eventPos[0] + this->InteractionOffset[0];
-	displayPos[1] = eventPos[1] + this->InteractionOffset[1];
-
-	double worldPos[3];
-	double worldOrient[9] = { 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
-	if (this->PointPlacer->ComputeWorldPosition(
-		this->Renderer, displayPos, ref, worldPos, worldOrient))
-	{
-
-		this->SetActiveNodeToWorldPosition(worldPos, worldOrient);
-
-		double vector[3];
-		vector[0] = worldPos[0] - ref[0];
-		vector[1] = worldPos[1] - ref[1];
-		vector[2] = worldPos[2] - ref[2];
-
-		for (int i = 0; i < this->GetNumberOfNodes(); i++)
-		{
-			if (i != this->ActiveNode)
-			{
-				this->GetNthNodeWorldPosition(i, ref);
-				worldPos[0] = ref[0] + vector[0];
-				worldPos[1] = ref[1] + vector[1];
-				worldPos[2] = ref[2] + vector[2];
-				this->SetNthNodeWorldPosition(i, worldPos, worldOrient);
-			}
-		}
-	}
-}
-
-void SplineTubeRepresentation::ScaleContour(double eventPos[2])
-{
-	double ref[3];
-
-	if (!this->GetActiveNodeWorldPosition(ref))
-	{
-		return;
-	}
-
-	double centroid[3];
-	ComputeCentroid(centroid);
-
-	double r2 = vtkMath::Distance2BetweenPoints(ref, centroid);
-
-	double displayPos[2];
-	displayPos[0] = eventPos[0] + this->InteractionOffset[0];
-	displayPos[1] = eventPos[1] + this->InteractionOffset[1];
-
-	double worldPos[3];
-	double worldOrient[9] = { 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
-	if (this->PointPlacer->ComputeWorldPosition(
-		this->Renderer, displayPos, ref, worldPos, worldOrient))
-	{
-		double d2 = vtkMath::Distance2BetweenPoints(worldPos, centroid);
-		if (d2 != 0.0)
-		{
-			double ratio = sqrt(d2 / r2);
-			// this->SetActiveNodeToWorldPosition(worldPos, worldOrient);
-
-			for (int i = 0; i < this->GetNumberOfNodes(); i++)
-			{
-				// if (i != this->ActiveNode)
-				{
-					this->GetNthNodeWorldPosition(i, ref);
-					worldPos[0] = centroid[0] + ratio * (ref[0] - centroid[0]);
-					worldPos[1] = centroid[1] + ratio * (ref[1] - centroid[1]);
-					worldPos[2] = centroid[2] + ratio * (ref[2] - centroid[2]);
-					this->SetNthNodeWorldPosition(i, worldPos, worldOrient);
-				}
-			}
-		}
-	}
-}
-
-void SplineTubeRepresentation::ComputeCentroid(double* ioCentroid)
-{
-	double p[3];
-	ioCentroid[0] = 0.;
-	ioCentroid[1] = 0.;
-	ioCentroid[2] = 0.;
-
-	for (int i = 0; i < this->GetNumberOfNodes(); i++)
-	{
-		this->GetNthNodeWorldPosition(i, p);
-		ioCentroid[0] += p[0];
-		ioCentroid[1] += p[1];
-		ioCentroid[2] += p[2];
-	}
-	double inv_N = 1. / static_cast<double>(this->GetNumberOfNodes());
-	ioCentroid[0] *= inv_N;
-	ioCentroid[1] *= inv_N;
-	ioCentroid[2] *= inv_N;
-}
-
-void SplineTubeRepresentation::Scale(double eventPos[2])
-{
-	// Get the current scale factor
-	double sf = this->Glypher->GetScaleFactor();
-
-	// Compute the scale factor
-	const int* size = this->Renderer->GetSize();
-	double dPos = static_cast<double>(eventPos[1] - this->LastEventPosition[1]);
-	sf *= (1.0 + 2.0 * (dPos / size[1])); // scale factor of 2.0 is arbitrary
-
-	// Scale the handle
-	this->Glypher->SetScaleFactor(sf);
-	if (this->ShowSelectedNodes && this->SelectedNodesGlypher)
-	{
-		this->SelectedNodesGlypher->SetScaleFactor(sf);
-	}
-}
-
-void SplineTubeRepresentation::CreateDefaultProperties()
-{
-	// 构造函数中设置默认属性, mc
-	this->Property = vtkProperty::New();
-	this->Property->SetColor(1.0, 1.0, 1.0);
-	this->Property->SetLineWidth(0.5);
-	this->Property->SetPointSize(3);
-
-	this->ActiveProperty = vtkProperty::New();
-	this->ActiveProperty->SetColor(0.0, 1.0, 0.0);
-	this->ActiveProperty->SetRepresentationToWireframe();
-	this->ActiveProperty->SetAmbient(1.0);
-	this->ActiveProperty->SetDiffuse(0.0);
-	this->ActiveProperty->SetSpecular(0.0);
-	this->ActiveProperty->SetLineWidth(1.0);
-
-	this->LinesProperty = vtkProperty::New();
-	this->LinesProperty->SetAmbient(1.0);
-	this->LinesProperty->SetDiffuse(0.0);
-	this->LinesProperty->SetSpecular(0.0);
-	this->LinesProperty->SetColor(1, 0, 0);
-	this->LinesProperty->SetLineWidth(1);
-}
-
-void SplineTubeRepresentation::BuildLines()
-{
-	//刷新线, 在控制点选择、删除控制点、右键结束、控制点拖动、整体移动时会触发, 在初始化的时候也会触发, 此时控制点数为 0 , mc
-	//std::cout << " -- Build Lines -- ";
+	// copied from parent class
 
 	vtkPoints* points = vtkPoints::New();
 	vtkCellArray* lines = vtkCellArray::New();
@@ -660,18 +313,17 @@ void SplineTubeRepresentation::BuildLines()
 
 	points->Delete();
 	lines->Delete();
+
+	// build the tube with the lines, by mc
+	this->m_TubeFilter->SetInputData(this->Lines);
+	this->m_TubeFilter->Update();
+	this->m_Tube = this->m_TubeFilter->GetOutput();
+	this->m_TubeMapper->SetInputData(this->m_Tube);
 }
 
-vtkPolyData* SplineTubeRepresentation::GetContourRepresentationAsPolyData()
+void SplineTubeContourRepresentation::BuildRepresentation()
 {
-	// Get the points in this contour as a vtkPolyData.
-	return this->Lines;
-}
-
-void SplineTubeRepresentation::BuildRepresentation()
-{
-	//刷新显示, 在控制点选择、删除控制点、右键结束、控制点拖动、整体移动、控制点悬浮、控制点取消鼠标悬浮时会触发, 在初始化的时候也会触发, 此时控制点数为 0 , mc
-	//std::cout << " -- Build Representation -- ";
+	// copied from parent class
 
 	// Make sure we are up to date with any changes made in the placer
 	this->UpdateContour();
@@ -689,6 +341,11 @@ void SplineTubeRepresentation::BuildRepresentation()
 		this->ActiveMapper->SetRelativeCoincidentTopologyLineOffsetParameters(0, -66000);
 		this->ActiveMapper->SetRelativeCoincidentTopologyPolygonOffsetParameters(0, -66000);
 		this->ActiveMapper->SetRelativeCoincidentTopologyPointOffsetParameter(-66000);
+
+		// by mc
+		this->m_TubeMapper->SetRelativeCoincidentTopologyLineOffsetParameters(0, -66000);
+		this->m_TubeMapper->SetRelativeCoincidentTopologyPolygonOffsetParameters(0, -66000);
+		this->m_TubeMapper->SetRelativeCoincidentTopologyPointOffsetParameter(-66000);
 	}
 	else
 	{
@@ -701,6 +358,11 @@ void SplineTubeRepresentation::BuildRepresentation()
 		this->ActiveMapper->SetRelativeCoincidentTopologyLineOffsetParameters(-1, -1);
 		this->ActiveMapper->SetRelativeCoincidentTopologyPolygonOffsetParameters(-1, -1);
 		this->ActiveMapper->SetRelativeCoincidentTopologyPointOffsetParameter(-1);
+
+		// by mc
+		this->m_TubeMapper->SetRelativeCoincidentTopologyLineOffsetParameters(0, -66000);
+		this->m_TubeMapper->SetRelativeCoincidentTopologyPolygonOffsetParameters(0, -66000);
+		this->m_TubeMapper->SetRelativeCoincidentTopologyPointOffsetParameter(-66000);
 	}
 
 	double p1[4], p2[4];
@@ -833,8 +495,9 @@ void SplineTubeRepresentation::BuildRepresentation()
 	}
 }
 
-void SplineTubeRepresentation::GetActors(vtkPropCollection* pc)
+void SplineTubeContourRepresentation::GetActors(vtkPropCollection* pc)
 {
+	// copied from parent class
 	this->Actor->GetActors(pc);
 	this->ActiveActor->GetActors(pc);
 	this->LinesActor->GetActors(pc);
@@ -842,20 +505,25 @@ void SplineTubeRepresentation::GetActors(vtkPropCollection* pc)
 	{
 		this->SelectedNodesActor->GetActors(pc);
 	}
+
+	// by mc
+	this->m_TubeActor->GetActors(pc);
 }
 
-void SplineTubeRepresentation::ReleaseGraphicsResources(vtkWindow* win)
+void SplineTubeContourRepresentation::ReleaseGraphicsResources(vtkWindow* win)
 {
-	// 释放图形资源, 在启动程序和关闭程序的时候都会触发, mc
+	// copied from parent class
 	this->Actor->ReleaseGraphicsResources(win);
 	this->ActiveActor->ReleaseGraphicsResources(win);
 	this->LinesActor->ReleaseGraphicsResources(win);
+
+	// by mc
+	this->m_TubeActor->ReleaseGraphicsResources(win);
 }
 
-int SplineTubeRepresentation::RenderOverlay(vtkViewport* viewport)
+int SplineTubeContourRepresentation::RenderOverlay(vtkViewport * viewport)
 {
-	// 覆盖渲染, 触发时机和 BuildRepresentation 基本一致, mc
-	//std::cout << " -- Render Overlay -- ";
+	// copied from parent class
 
 	int count = 0;
 	count += this->LinesActor->RenderOverlay(viewport);
@@ -867,13 +535,19 @@ int SplineTubeRepresentation::RenderOverlay(vtkViewport* viewport)
 	{
 		count += this->ActiveActor->RenderOverlay(viewport);
 	}
+
+	// by mc
+	if (this->m_TubeActor->GetVisibility())
+	{
+		count += this->m_TubeActor->RenderOverlay(viewport);
+	}
+
 	return count;
 }
 
-int SplineTubeRepresentation::RenderOpaqueGeometry(vtkViewport* viewport)
+int SplineTubeContourRepresentation::RenderOpaqueGeometry(vtkViewport * viewport)
 {
-	// 不透明几何体渲染, 触发时机和 RenderOverlay 一致, mc
-	//std::cout << " -- Render Opaque Geometry -- ";
+	// copied from parent class
 
 	// Since we know RenderOpaqueGeometry gets called first, will do the
 	// build here
@@ -895,13 +569,18 @@ int SplineTubeRepresentation::RenderOpaqueGeometry(vtkViewport* viewport)
 		count += this->SelectedNodesActor->RenderOpaqueGeometry(viewport);
 	}
 
+	// by mc
+	if (this->m_TubeActor->GetVisibility())
+	{
+		count += this->m_TubeActor->RenderOpaqueGeometry(viewport);
+	}
+
 	return count;
 }
 
-int SplineTubeRepresentation::RenderTranslucentPolygonalGeometry(vtkViewport* viewport)
+int SplineTubeContourRepresentation::RenderTranslucentPolygonalGeometry(vtkViewport * viewport)
 {
-	// 半透明多边形几何体渲染, mc
-	//std::cout << " -- Render Translucent Polygonal Geometry -- ";
+	// copied from parent class
 
 	int count = 0;
 	count += this->LinesActor->RenderTranslucentPolygonalGeometry(viewport);
@@ -913,13 +592,19 @@ int SplineTubeRepresentation::RenderTranslucentPolygonalGeometry(vtkViewport* vi
 	{
 		count += this->ActiveActor->RenderTranslucentPolygonalGeometry(viewport);
 	}
+
+	// by mc
+	if (this->m_TubeActor->GetVisibility())
+	{
+		count += this->m_TubeActor->RenderTranslucentPolygonalGeometry(viewport);
+	}
+
 	return count;
 }
 
-vtkTypeBool SplineTubeRepresentation::HasTranslucentPolygonalGeometry()
+vtkTypeBool SplineTubeContourRepresentation::HasTranslucentPolygonalGeometry()
 {
-	// 半透明多边形几何体渲染, mc
-	//std::cout << " -- Has Translucent Polygonal Geometry -- ";
+	// copied from parent class
 
 	int result = 0;
 	result |= this->LinesActor->HasTranslucentPolygonalGeometry();
@@ -931,137 +616,12 @@ vtkTypeBool SplineTubeRepresentation::HasTranslucentPolygonalGeometry()
 	{
 		result |= this->ActiveActor->HasTranslucentPolygonalGeometry();
 	}
+
+	// by mc
+	if (this->m_TubeActor->GetVisibility())
+	{
+		result |= this->m_TubeActor->HasTranslucentPolygonalGeometry();
+	}
+
 	return result;
-}
-
-void SplineTubeRepresentation::SetLineColor(double r, double g, double b)
-{
-	if (this->GetLinesProperty())
-	{
-		this->GetLinesProperty()->SetColor(r, g, b);
-	}
-}
-
-void SplineTubeRepresentation::SetShowSelectedNodes(vtkTypeBool flag)
-{
-	vtkDebugMacro(<< this->GetClassName() << " (" << this << "): setting ShowSelectedNodes to "
-		<< flag);
-	if (this->ShowSelectedNodes != flag)
-	{
-		this->ShowSelectedNodes = flag;
-		this->Modified();
-
-		if (this->ShowSelectedNodes)
-		{
-			if (!this->SelectedNodesActor)
-			{
-				this->CreateSelectedNodesRepresentation();
-			}
-			else
-			{
-				this->SelectedNodesActor->SetVisibility(1);
-			}
-		}
-		else
-		{
-			if (this->SelectedNodesActor)
-			{
-				this->SelectedNodesActor->SetVisibility(0);
-			}
-		}
-	}
-}
-
-double* SplineTubeRepresentation::GetBounds()
-{
-	return this->Lines->GetPoints() ? this->Lines->GetPoints()->GetBounds() : nullptr;
-}
-
-void SplineTubeRepresentation::CreateSelectedNodesRepresentation()
-{
-	vtkSphereSource* sphere = vtkSphereSource::New();
-	sphere->SetThetaResolution(12);
-	sphere->SetRadius(0.3);
-	this->SelectedNodesCursorShape = sphere->GetOutput();
-	this->SelectedNodesCursorShape->Register(this);
-	sphere->Delete();
-
-	// Represent the position of the cursor
-	this->SelectedNodesPoints = vtkPoints::New();
-	this->SelectedNodesPoints->SetNumberOfPoints(100);
-	// this->SelectedNodesPoints->SetNumberOfPoints(1);
-	// this->SelectedNodesPoints->SetPoint(0, 0.0, 0.0, 0.0);
-
-	vtkDoubleArray* normals = vtkDoubleArray::New();
-	normals->SetNumberOfComponents(3);
-	normals->SetNumberOfTuples(100);
-	normals->SetNumberOfTuples(1);
-	double n[3] = { 0, 0, 0 };
-	normals->SetTuple(0, n);
-
-	this->SelectedNodesData = vtkPolyData::New();
-	this->SelectedNodesData->SetPoints(this->SelectedNodesPoints);
-	this->SelectedNodesData->GetPointData()->SetNormals(normals);
-	normals->Delete();
-
-	this->SelectedNodesGlypher = vtkGlyph3D::New();
-	this->SelectedNodesGlypher->SetInputData(this->SelectedNodesData);
-	this->SelectedNodesGlypher->SetVectorModeToUseNormal();
-	this->SelectedNodesGlypher->OrientOn();
-	this->SelectedNodesGlypher->ScalingOn();
-	this->SelectedNodesGlypher->SetScaleModeToDataScalingOff();
-	this->SelectedNodesGlypher->SetScaleFactor(1.0);
-
-	this->SelectedNodesGlypher->SetSourceData(this->SelectedNodesCursorShape);
-
-	this->SelectedNodesMapper = vtkPolyDataMapper::New();
-	this->SelectedNodesMapper->SetInputData(this->SelectedNodesGlypher->GetOutput());
-	vtkPolyDataMapper::SetResolveCoincidentTopologyToPolygonOffset();
-	this->SelectedNodesMapper->ScalarVisibilityOff();
-
-	vtkProperty* selProperty = vtkProperty::New();
-	selProperty->SetColor(0.0, 1.0, 0.0);
-	selProperty->SetLineWidth(0.5);
-	selProperty->SetPointSize(3);
-
-	this->SelectedNodesActor = vtkActor::New();
-	this->SelectedNodesActor->SetMapper(this->SelectedNodesMapper);
-	this->SelectedNodesActor->SetProperty(selProperty);
-	selProperty->Delete();
-}
-
-void SplineTubeRepresentation::PrintSelf(ostream& os, vtkIndent indent)
-{
-	// Superclass typedef defined in vtkTypeMacro() found in vtkSetGet.h
-	this->Superclass::PrintSelf(os, indent);
-
-	os << indent << "Always On Top: " << (this->AlwaysOnTop ? "On\n" : "Off\n");
-	os << indent << "ShowSelectedNodes: " << this->ShowSelectedNodes << endl;
-
-	if (this->Property)
-	{
-		os << indent << "Property: " << this->Property << "\n";
-	}
-	else
-	{
-		os << indent << "Property: (none)\n";
-	}
-
-	if (this->ActiveProperty)
-	{
-		os << indent << "Active Property: " << this->ActiveProperty << "\n";
-	}
-	else
-	{
-		os << indent << "Active Property: (none)\n";
-	}
-
-	if (this->LinesProperty)
-	{
-		os << indent << "Lines Property: " << this->LinesProperty << "\n";
-	}
-	else
-	{
-		os << indent << "Lines Property: (none)\n";
-	}
 }

@@ -11,15 +11,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SplineTubeRepresentation.cpp">
+    <ClCompile Include="SplineTube.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="SplineTube.cpp">
+    <ClCompile Include="SplineTubeContourRepresentation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SplineTubeRepresentation.h">
+    <ClInclude Include="SplineTubeContourRepresentation.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

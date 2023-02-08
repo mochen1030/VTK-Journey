@@ -1,20 +1,20 @@
 // own includes
-#include "SplineTubeRepresentation.h"
+#include "SplineTubeContourRepresentation.h"
 
 // vtk includes
+#include <vtkAutoInit.h>
+#include <vtkCamera.h>
 #include <vtkContourWidget.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkNamedColors.h>
 #include <vtkNew.h>
-#include <vtkPoints.h>
 #include <vtkPolyData.h>
 #include <vtkProperty.h>
+#include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
-#include <vtkRenderer.h>
 
-// vtl module init
-#include <vtkAutoInit.h>
+// initialize vtl module 
 VTK_MODULE_INIT(vtkRenderingOpenGL2);
 VTK_MODULE_INIT(vtkInteractionStyle);
 
@@ -26,7 +26,7 @@ int main(int, char* [])
 	vtkNew<vtkContourWidget> contourWidget;
 
 	// Override the default representation for the contour widget to customize its look
-	vtkNew<SplineTubeRepresentation> contourRepresentation;
+	vtkNew<SplineTubeContourRepresentation> contourRepresentation;
 	contourRepresentation->GetLinesProperty()->SetColor(colors->GetColor3d("Red").GetData());
 	contourWidget->SetRepresentation(contourRepresentation);
 
@@ -50,8 +50,11 @@ int main(int, char* [])
 
 	// Set up the contour widget within the visualization pipeline just assembled
 	contourWidget->SetInteractor(interactor);
-	contourWidget->On();							// Turn on the interactor observer
-	renderer->ResetCamera();						// Reposition camera to fit the scene elements
+	// Turn on the interactor observer
+	contourWidget->On();
+	// Reposition camera to fit the scene elements
+	renderer->ResetCamera();
+	renderer->GetActiveCamera()->SetDistance(500);
 
 	// Start the interaction
 	renderWindow->Render();
