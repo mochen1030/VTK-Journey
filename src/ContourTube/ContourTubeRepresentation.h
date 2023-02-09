@@ -1,29 +1,29 @@
 /*
- * @class:	SplineTubeContourRepresentation
+ * @class:	ContourTubeRepresentation
  * @author: mc
  * @date:   2023.2.8
  * @brief:	This class provides the representation with a spline tube for the vtkContourWidget
  */
 
-#ifndef SplineTubeContourRepresentation_h
-#define SplineTubeContourRepresentation_h
+#ifndef ContourTubeRepresentation_h
+#define ContourTubeRepresentation_h
 
 // vtk includes
 #include <vtkOrientedGlyphContourRepresentation.h>
 #include <vtkTubeFilter.h>
 
-class SplineTubeContourRepresentation : public vtkOrientedGlyphContourRepresentation
+class ContourTubeRepresentation : public vtkOrientedGlyphContourRepresentation
 {
 public:
 	// intantiate this class
-	static SplineTubeContourRepresentation* New();
+	static ContourTubeRepresentation* New();
 
 	// standard methods for instances of this class
-	vtkTypeMacro(SplineTubeContourRepresentation, vtkOrientedGlyphContourRepresentation);
+	vtkTypeMacro(ContourTubeRepresentation, vtkOrientedGlyphContourRepresentation);
 
 protected:
-	SplineTubeContourRepresentation();
-	~SplineTubeContourRepresentation();
+	ContourTubeRepresentation();
+	~ContourTubeRepresentation();
 
 	// build the lines and tube, overrided from parent class, by mc
 	void BuildLines() override;
@@ -40,7 +40,6 @@ protected:
 	vtkTypeBool HasTranslucentPolygonalGeometry() override;
 
 protected:
-
 	// members about the tube, by mc
 	vtkSmartPointer<vtkPolyData>					m_Tube;
 	vtkSmartPointer<vtkPolyDataMapper>				m_TubeMapper;

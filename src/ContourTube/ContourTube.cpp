@@ -1,5 +1,5 @@
 // own includes
-#include "SplineTubeContourRepresentation.h"
+#include "ContourTubeRepresentation.h"
 
 // vtk includes
 #include <vtkAutoInit.h>
@@ -26,9 +26,9 @@ int main(int, char* [])
 	vtkNew<vtkContourWidget> contourWidget;
 
 	// Override the default representation for the contour widget to customize its look
-	vtkNew<SplineTubeContourRepresentation> contourRepresentation;
-	contourRepresentation->GetLinesProperty()->SetColor(colors->GetColor3d("Red").GetData());
-	contourWidget->SetRepresentation(contourRepresentation);
+	vtkNew<ContourTubeRepresentation> contourTubeRepresentation;
+	contourTubeRepresentation->GetLinesProperty()->SetColor(colors->GetColor3d("Red").GetData());
+	contourWidget->SetRepresentation(contourTubeRepresentation);
 
 	// Create the renderer to visualize the scene
 	vtkNew<vtkRenderer> renderer;

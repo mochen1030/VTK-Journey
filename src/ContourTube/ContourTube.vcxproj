@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3D11467D-8630-4871-B3FA-CF4379646A0E}</ProjectGuid>
-    <RootNamespace>SplineTube</RootNamespace>
+    <RootNamespace>ContourTube</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -130,11 +130,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="SplineTube.cpp" />
-    <ClCompile Include="SplineTubeContourRepresentation.cpp" />
+    <ClCompile Include="ContourTube.cpp" />
+    <ClCompile Include="ContourTubeRepresentation.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SplineTubeContourRepresentation.h" />
+    <ClInclude Include="ContourTubeRepresentation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

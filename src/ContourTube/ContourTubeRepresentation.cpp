@@ -1,5 +1,5 @@
 // own inclues
-#include "SplineTubeContourRepresentation.h"
+#include "ContourTubeRepresentation.h"
 
 // vtk includes
 #include <vtkActor.h>
@@ -21,9 +21,9 @@
 #include <vtkTransformPolyDataFilter.h>
 
 // implement the standard form of the New() method
-vtkStandardNewMacro(SplineTubeContourRepresentation);
+vtkStandardNewMacro(ContourTubeRepresentation);
 
-SplineTubeContourRepresentation::SplineTubeContourRepresentation()
+ContourTubeRepresentation::ContourTubeRepresentation()
 {
 	/********** Constructor copied from vtkOrientedGlyphContourRepresentation.cxx **********/
 
@@ -191,7 +191,7 @@ SplineTubeContourRepresentation::SplineTubeContourRepresentation()
 	this->m_TubeFilter->SetNumberOfSides(20);
 }
 
-SplineTubeContourRepresentation::~SplineTubeContourRepresentation()
+ContourTubeRepresentation::~ContourTubeRepresentation()
 {
 	/********** Destructor copied from vtkOrientedGlyphContourRepresentation.cxx **********/
 
@@ -247,7 +247,7 @@ SplineTubeContourRepresentation::~SplineTubeContourRepresentation()
 	}
 }
 
-void SplineTubeContourRepresentation::BuildLines()
+void ContourTubeRepresentation::BuildLines()
 {
 	// copied from parent class
 
@@ -321,7 +321,7 @@ void SplineTubeContourRepresentation::BuildLines()
 	this->m_TubeMapper->SetInputData(this->m_Tube);
 }
 
-void SplineTubeContourRepresentation::BuildRepresentation()
+void ContourTubeRepresentation::BuildRepresentation()
 {
 	// copied from parent class
 
@@ -495,7 +495,7 @@ void SplineTubeContourRepresentation::BuildRepresentation()
 	}
 }
 
-void SplineTubeContourRepresentation::GetActors(vtkPropCollection* pc)
+void ContourTubeRepresentation::GetActors(vtkPropCollection* pc)
 {
 	// copied from parent class
 	this->Actor->GetActors(pc);
@@ -510,7 +510,7 @@ void SplineTubeContourRepresentation::GetActors(vtkPropCollection* pc)
 	this->m_TubeActor->GetActors(pc);
 }
 
-void SplineTubeContourRepresentation::ReleaseGraphicsResources(vtkWindow* win)
+void ContourTubeRepresentation::ReleaseGraphicsResources(vtkWindow* win)
 {
 	// copied from parent class
 	this->Actor->ReleaseGraphicsResources(win);
@@ -521,7 +521,7 @@ void SplineTubeContourRepresentation::ReleaseGraphicsResources(vtkWindow* win)
 	this->m_TubeActor->ReleaseGraphicsResources(win);
 }
 
-int SplineTubeContourRepresentation::RenderOverlay(vtkViewport * viewport)
+int ContourTubeRepresentation::RenderOverlay(vtkViewport * viewport)
 {
 	// copied from parent class
 
@@ -545,7 +545,7 @@ int SplineTubeContourRepresentation::RenderOverlay(vtkViewport * viewport)
 	return count;
 }
 
-int SplineTubeContourRepresentation::RenderOpaqueGeometry(vtkViewport * viewport)
+int ContourTubeRepresentation::RenderOpaqueGeometry(vtkViewport * viewport)
 {
 	// copied from parent class
 
@@ -578,7 +578,7 @@ int SplineTubeContourRepresentation::RenderOpaqueGeometry(vtkViewport * viewport
 	return count;
 }
 
-int SplineTubeContourRepresentation::RenderTranslucentPolygonalGeometry(vtkViewport * viewport)
+int ContourTubeRepresentation::RenderTranslucentPolygonalGeometry(vtkViewport * viewport)
 {
 	// copied from parent class
 
@@ -602,7 +602,7 @@ int SplineTubeContourRepresentation::RenderTranslucentPolygonalGeometry(vtkViewp
 	return count;
 }
 
-vtkTypeBool SplineTubeContourRepresentation::HasTranslucentPolygonalGeometry()
+vtkTypeBool ContourTubeRepresentation::HasTranslucentPolygonalGeometry()
 {
 	// copied from parent class
 
